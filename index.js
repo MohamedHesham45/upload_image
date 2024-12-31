@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 const port = 3001;
@@ -29,6 +30,8 @@ const upload = multer({ storage });
 // Add body-parser middleware
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+app.use(cors());
 
 app.post('/upload-images', upload.array('images', 10), (req, res) => {
   if (!req.files || req.files.length === 0) {
