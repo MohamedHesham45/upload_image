@@ -8,8 +8,8 @@ const https = require('https');
 const app = express();
 const port = 3001;
 const options = {
-  key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.cert'),
+  key: fs.readFileSync('/etc/letsencrypt/live/sitaramall.com-0001/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/sitaramall.com-0001/fullchain.pem'),
 };
 app.use('/uploads', express.static('uploads'));
 
