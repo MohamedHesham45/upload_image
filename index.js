@@ -48,7 +48,7 @@ app.post('/upload-images', upload.array('images', 10), (req, res) => {
     });
   }
   
-  const filePaths = req.files.map(file => file.path); 
+  const filePaths = req.files.map(file => "/"+file.path); 
   res.status(200).json({ message: 'Images uploaded successfully', files: filePaths });
 });
 
