@@ -4,10 +4,13 @@ const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const https = require('https');
 const app = express();
 const port = 3001;
-
+const options = {
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.cert'),
+};
 app.use('/uploads', express.static('uploads'));
 
 // Ensure uploads directory exists
@@ -74,6 +77,9 @@ app.delete('/remove-images', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+// app.listen(port, () => {
+//   console.log(`Server running at http://localhost:${port}`);
+// });
+https.createServer(options, app).listen(port, () => {
+  console.log(`HTTPS server is running on https://localhost:${port}`);
 });
