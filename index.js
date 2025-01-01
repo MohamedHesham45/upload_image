@@ -4,12 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const https = require('https');
+
 const app = express();
 const port = 3001;
 const options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/sitaramall.com-0001/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/sitaramall.com-0001/fullchain.pem'),
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.cert'),
 };
 app.use('/uploads', express.static('uploads'));
 
@@ -48,7 +48,7 @@ app.post('/upload-images', upload.array('images', 10), (req, res) => {
     });
   }
   
-  const filePaths = req.files.map(file => "/"+file.path); 
+  const filePaths = req.files.map(file => file.path); 
   res.status(200).json({ message: 'Images uploaded successfully', files: filePaths });
 });
 
@@ -77,9 +77,6 @@ app.delete('/remove-images', (req, res) => {
   });
 });
 
-// app.listen(port, () => {
-//   console.log(`Server running at http://localhost:${port}`);
-// });
-https.createServer(options, app).listen(port, () => {
-  console.log(`HTTPS server is running on https://localhost:${port}`);
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
