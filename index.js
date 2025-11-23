@@ -1,20 +1,20 @@
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
 const port = 3001;
 const options = {
-  key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.cert'),
+  key: fs.readFileSync("server.key"),
+  cert: fs.readFileSync("server.cert"),
 };
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 
 // Ensure uploads directory exists
-const uploadsDir = 'uploads';
+const uploadsDir = "uploads";
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
@@ -24,8 +24,8 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); 
-  }
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
 });
 
 const upload = multer({ storage });
@@ -36,44 +36,76 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 
 app.use(cors());
 
-app.post('/upload-images', upload.array('images', 10), (req, res) => {
+app.post("/upload-images", upload.array("images", 10), (req, res) => {
   if (!req.files || req.files.length === 0) {
     // Create a new file if no files are uploaded
-    const filePath = 'uploads/no-files-uploaded.txt';
-    fs.writeFile(filePath, 'No files were uploaded.', (err) => {
+    const filePath = "uploads/no-files-uploaded.txt";
+    fs.writeFile(filePath, "No files were uploaded.", (err) => {
       if (err) {
-        return res.status(500).send('Error creating file.');
+        return res.status(500).send("Error creating file.");
       }
-      return res.status(400).send('No images uploaded. A file has been created.');
+      return res
+        .status(400)
+        .send("No images uploaded. A file has been created.");
     });
   }
-  
-  const filePaths = req.files.map(file => file.path); 
-  res.status(200).json({ message: 'Images uploaded successfully', files: filePaths });
+
+  const filePaths = req.files.map((file) => file.path);
+  res
+    .status(200)
+    .json({ message: "Images uploaded successfully", files: filePaths });
 });
 
-app.delete('/remove-images', (req, res) => {
-  console.log('Received request to delete images', req.body);
+app.delete("/remove-images", (req, res) => {
+  console.log("Received request to delete images", req.body);
   const { filenames } = req.body; // Expecting an array of filenames to delete
 
   if (!filenames || !Array.isArray(filenames) || filenames.length === 0) {
-    return res.status(400).send('No filenames provided.');
+    return res.status(400).send("No filenames provided.");
   }
 
-  const deletePromises = filenames.map(fullPath => {
+  const deletePromises = filenames.map((fullPath) => {
     const filename = path.basename(fullPath); // Extract the filename from the full path
     const filePath = path.join(uploadsDir, filename);
-    return fs.promises.unlink(filePath).catch(err => {
+    return fs.promises.unlink(filePath).catch((err) => {
       console.error(`Error deleting file ${filename}:`, err);
       return null; // Return null for failed deletions
     });
   });
 
-  Promise.all(deletePromises).then(results => {
-    const deletedFiles = results.filter(result => result !== null);
-    res.status(200).json({ message: 'Files deleted successfully'});
-  }).catch(err => {
-    res.status(500).send('Error deleting files.');
+  Promise.all(deletePromises)
+    .then((results) => {
+      const deletedFiles = results.filter((result) => result !== null);
+      res.status(200).json({ message: "Files deleted successfully" });
+    })
+    .catch((err) => {
+      res.status(500).send("Error deleting files.");
+    });
+});
+app.post("/upload-video", upload.single("video"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("No video uploaded.");
+  }
+
+  res.status(200).json({
+    message: "Video uploaded successfully",
+    file: req.file.path,
+  });
+});
+app.delete("/remove-files", (req, res) => {
+  const { files } = req.body;
+
+  if (!files || !Array.isArray(files) || files.length === 0) {
+    return res.status(400).send("No files provided.");
+  }
+
+  const deleteOps = files.map((fullPath) => {
+    const filename = path.basename(fullPath);
+    return fs.promises.unlink(path.join("uploads", filename)).catch(() => null);
+  });
+
+  Promise.all(deleteOps).then(() => {
+    res.status(200).json({ message: "Files deleted successfully" });
   });
 });
 
